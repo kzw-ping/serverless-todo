@@ -6,6 +6,7 @@ plugins:
   - serverless-reqvalidator-plugin
   - serverless-aws-documentation
   - serverless-iam-roles-per-function
+  - serverless-plugin-tracing
 
 package:
   individually: true
@@ -22,6 +23,18 @@ provider:
     USER_ID_INDEX: userId
     ATTACH_S3_BUCKET: khine-serverless-todo-app-${self:provider.stage}
     SIGNED_URL_EXPIRATION: 300
+
+  # enable AWS X-Ray Tracing
+  tracing:
+    lambda: true
+    apiGateway: true
+    iamRoleStatements:            # Permissions here or under every function to trace
+      - Effect: 'Allow'           # xray tracing permissions
+        Action:
+          - 'xray:PutTraceSegments'             # Trace Segments
+          - 'xray:PutTelemetryRecords'          # Telemetry
+        Resource:
+          - '*'
 
 custom:
   documentation:
@@ -174,6 +187,8 @@ resources:
             KeySchema:
               - AttributeName: userId
                 KeyType: HASH
+              - AttributeName: todoId
+                KeyType: RANGE
             Projection:
               ProjectionType: ALL # What attributes will be copied to an index
 
